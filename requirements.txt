@@ -1,0 +1,5 @@
+python-dotenv
+cloudinary
+pymysql
+qrcode
+Pillow
