@@ -40,7 +40,7 @@ jobs:
             --onefile \
             --enable-plugin=tk-inter \
             --output-dir=build \
-            your_script.py
+            main.py
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
