@@ -1,10 +1,10 @@
-name: Build StudentQr Executable
+name: Build with Nuitka
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -21,19 +21,29 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.10"
 
       - name: Install dependencies
+        shell: bash
         run: |
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
           pip install nuitka
 
       - name: Build executable with Nuitka
+        shell: bash
         run: |
-          python -m nuitka --standalone --onefile --enable-plugin=tk-inter --output-filename=StudentQr main.py
+          python -m nuitka \
+            --standalone \
+            --onefile \
+            --enable-plugin=tk-inter \
+            --output-dir=build \
+            your_script.py
 
-      - name: Upload build artifact
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: StudentQr-${{ matrix.os }}
-          path: StudentQr*
+          name: build-${{ matrix.os }}
+          path: build
