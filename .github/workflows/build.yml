@@ -24,7 +24,7 @@ jobs:
 
       - name: Build for Linux
         run: |
-          pyinstaller --onefile --name myapp main.py
+          pyinstaller --onefile --name myapp --add-data ".env:.env" main.py
           mkdir -p dist/linux
           mv dist/myapp dist/linux/
 
@@ -52,7 +52,7 @@ jobs:
 
       - name: Build for macOS
         run: |
-          pyinstaller --onefile --name myapp main.py
+          pyinstaller --onefile --name myapp --add-data ".env:.env" main.py
           mkdir -p dist/macos
           mv dist/myapp dist/macos/
 
@@ -80,7 +80,7 @@ jobs:
 
       - name: Build for Windows
         run: |
-          pyinstaller --onefile --name myapp main.py
+          pyinstaller --onefile --name myapp --add-data ".env;.env" main.py
           mkdir dist\\windows
           move dist\\myapp.exe dist\\windows\\
 
