@@ -7,55 +7,41 @@ on:
 
 jobs:
   build-linux:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest   # ✅ Modern runner
+    container: quay.io/pypa/manylinux2014_x86_64  # ✅ Stable glibc container
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Install dependencies for building Python
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential wget libssl-dev zlib1g-dev \
-              libncurses5-dev libffi-dev libsqlite3-dev libreadline-dev \
-              libtk8.6 tcl-dev libgdbm-dev liblzma-dev uuid-dev
-
-      # Download, build, and install Python with --enable-shared
-      - name: Build Python 3.10 with --enable-shared
-        run: |
-          wget https://www.python.org/ftp/python/3.10.14/Python-3.10.14.tgz
-          tar -xvf Python-3.10.14.tgz
-          cd Python-3.10.14
-          ./configure --enable-optimizations --enable-shared
-          make -j$(nproc)
-          sudo make altinstall
-          echo "/usr/local/lib" | sudo tee /etc/ld.so.conf.d/python3.10.conf
-          sudo ldconfig
-
-      # Verify Python installation
-      - name: Check Python
-        run: |
-          python3.10 --version
-          ls -l /usr/local/lib/libpython3.10.so*
-
-      # Install pip + project dependencies
-      - name: Setup pip
-        run: |
-          curl -sS https://bootstrap.pypa.io/get-pip.py | sudo python3.10
+          python3.10 -m ensurepip
           python3.10 -m pip install --upgrade pip
-          python3.10 -m pip install -r requirements.txt pyinstaller
+          python3.10 -m pip install pyinstaller -r requirements.txt
 
-      # Build executable
+      - name: Create .env file
+        run: |
+          echo "API_KEY=${{ secrets.API_KEY }}" >> .env
+          echo "API_SECRET=${{ secrets.API_SECRET }}" >> .env
+          echo "CLOUD_NAME=${{ secrets.CLOUD_NAME }}" >> .env
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+          echo "EMAIL_ADDRESS=${{ secrets.EMAIL_ADDRESS }}" >> .env
+          echo "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}" >> .env
+
       - name: Build executable
         run: |
-          python3.10 -m PyInstaller --onefile your_app.py
+          python3.10 -m PyInstaller --onefile --name myapp --add-data ".env:.env" main.py
+          mkdir -p dist/linux
+          mv dist/myapp dist/linux/
 
-      - name: Upload artifact
+      - name: Upload Linux artifact
         uses: actions/upload-artifact@v3
         with:
-          name: linux-executable
-          path: dist/*
-
+          name: myapp-linux
+          path: dist/linux/
   build-macos:
     runs-on: macos-latest
     steps:
