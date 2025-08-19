@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build-linux:
+   build-linux:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
@@ -17,8 +17,15 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libssl-dev libffi-dev \
+              python3-dev zlib1g-dev libstdc++6
+
+      - name: Install Python dependencies
+        run: |
+          pip install --upgrade pip
           pip install -r requirements.txt
           pip install pyinstaller
 
@@ -45,6 +52,7 @@ jobs:
         with:
           name: myapp-linux
           path: dist/linux/
+
 
   build-macos:
     runs-on: macos-latest
