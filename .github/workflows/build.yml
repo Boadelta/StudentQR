@@ -38,7 +38,7 @@ jobs:
           mv dist/myapp dist/linux/
 
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: myapp-linux
           path: dist/linux/
