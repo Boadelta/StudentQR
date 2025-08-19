@@ -28,7 +28,7 @@ jobs:
             echo \"DB_USER=${{ secrets.DB_USER }}\" >> .env &&
             echo \"EMAIL_ADDRESS=${{ secrets.EMAIL_ADDRESS }}\" >> .env &&
             echo \"EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}\" >> .env &&
-            /opt/python/cp310-cp310/bin/pyinstaller --onefile --name myapp --add-data \".env:.env\" main.py &&
+            /opt/python/cp310-cp310/bin/python -m PyInstaller --onefile --name myapp --add-data ".env:.env" main.py
             mkdir -p dist/linux &&
             mv dist/myapp dist/linux/
           "
