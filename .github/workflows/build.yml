@@ -54,7 +54,7 @@ jobs:
           path: dist/linux/
 
 
-  build-macos:
+   build-macos:
     runs-on: macos-latest
     steps:
       - name: Checkout repository
@@ -94,7 +94,7 @@ jobs:
           name: myapp-macos
           path: dist/macos/
 
-  build-windows:
+   build-windows:
     runs-on: windows-latest
     steps:
       - name: Checkout repository
