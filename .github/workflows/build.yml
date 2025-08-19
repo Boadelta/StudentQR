@@ -39,7 +39,6 @@ jobs:
           name: myapp-linux
           path: dist/linux/
 
-
   build-macos:
     runs-on: macos-latest
     steps:
