@@ -7,39 +7,35 @@ on:
 
 jobs:
   build-linux:
-    runs-on: ubuntu-latest   # ✅ Modern runner
-    container: quay.io/pypa/manylinux2014_x86_64  # ✅ Oldest glibc for max compatibility
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install dependencies
+      - name: Build inside manylinux2014 container
         run: |
-          python3.10 -m ensurepip
-          python3.10 -m pip install --upgrade pip
-          python3.10 -m pip install pyinstaller -r requirements.txt
-
-      - name: Create .env file
-        run: |
-          echo "API_KEY=${{ secrets.API_KEY }}" >> .env
-          echo "API_SECRET=${{ secrets.API_SECRET }}" >> .env
-          echo "CLOUD_NAME=${{ secrets.CLOUD_NAME }}" >> .env
-          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-          echo "EMAIL_ADDRESS=${{ secrets.EMAIL_ADDRESS }}" >> .env
-          echo "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}" >> .env
-
-      - name: Build executable
-        run: |
-          export PYINSTALLER_NO_LIBPYTHON=1   # ✅ Skip libpython requirement
-          python3.10 -m PyInstaller --onefile --name myapp --add-data ".env:.env" main.py
-          mkdir -p dist/linux
-          mv dist/myapp dist/linux/
+          docker run --rm -v ${{ github.workspace }}:/src -w /src quay.io/pypa/manylinux2014_x86_64 \
+          bash -c "
+            python3.10 -m ensurepip &&
+            python3.10 -m pip install --upgrade pip &&
+            python3.10 -m pip install pyinstaller -r requirements.txt &&
+            echo 'API_KEY=${{ secrets.API_KEY }}' >> .env &&
+            echo 'API_SECRET=${{ secrets.API_SECRET }}' >> .env &&
+            echo 'CLOUD_NAME=${{ secrets.CLOUD_NAME }}' >> .env &&
+            echo 'DB_HOST=${{ secrets.DB_HOST }}' >> .env &&
+            echo 'DB_NAME=${{ secrets.DB_NAME }}' >> .env &&
+            echo 'DB_PASSWORD=${{ secrets.DB_PASSWORD }}' >> .env &&
+            echo 'DB_USER=${{ secrets.DB_USER }}' >> .env &&
+            echo 'EMAIL_ADDRESS=${{ secrets.EMAIL_ADDRESS }}' >> .env &&
+            echo 'EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}' >> .env &&
+            export PYINSTALLER_NO_LIBPYTHON=1 &&
+            python3.10 -m PyInstaller --onefile --name myapp --add-data '.env:.env' main.py &&
+            mkdir -p dist/linux &&
+            mv dist/myapp dist/linux/
+          "
 
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: myapp-linux
           path: dist/linux/
