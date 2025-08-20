@@ -6,52 +6,52 @@ on:
       - main
 
 jobs:
+
+
   build-linux:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Build inside manylinux2014 container
-        run: |
-          docker run --rm -v ${{ github.workspace }}:/src -w /src quay.io/pypa/manylinux2014_x86_64 bash -c "
-            # Use Python 3.7 inside the container
-            /opt/python/cp37-cp37m/bin/pip install --upgrade pip
-            /opt/python/cp37-cp37m/bin/pip install pyinstaller -r requirements.txt
+    - name: Build inside manylinux2014 container
+      run: |
+        docker run --rm -v ${{ github.workspace }}:/src -w /src quay.io/pypa/manylinux2014_x86_64 bash -c "
+          # Upgrade pip
+          python3.7 -m pip install --upgrade pip
 
-            # Verify Python and Pip
-            /opt/python/cp37-cp37m/bin/python --version
-            /opt/python/cp37-cp37m/bin/pip --version
+          # Install dependencies including PyInstaller
+          python3.7 -m pip install -r requirements.txt pyinstaller
 
-            # Ensure .env exists
-            echo 'API_KEY=${{ secrets.API_KEY }}' >> .env
-            echo 'API_SECRET=${{ secrets.API_SECRET }}' >> .env
-            echo 'CLOUD_NAME=${{ secrets.CLOUD_NAME }}' >> .env
-            echo 'DB_HOST=${{ secrets.DB_HOST }}' >> .env
-            echo 'DB_NAME=${{ secrets.DB_NAME }}' >> .env
-            echo 'DB_PASSWORD=${{ secrets.DB_PASSWORD }}' >> .env
-            echo 'DB_USER=${{ secrets.DB_USER }}' >> .env
-            echo 'EMAIL_ADDRESS=${{ secrets.EMAIL_ADDRESS }}' >> .env
-            echo 'EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}' >> .env
+          # Verify Python and pip
+          python3.7 --version
+          python3.7 -m pip --version
 
-            # Build executable
-            export PYINSTALLER_NO_LIBPYTHON=1
-            /opt/python/cp37-cp37m/bin/python -m PyInstaller --onefile --name myapp --add-data '.env:.env' main.py
+          # Ensure .env exists
+          echo 'API_KEY=${{ secrets.API_KEY }}' >> .env
+          echo 'API_SECRET=${{ secrets.API_SECRET }}' >> .env
+          echo 'CLOUD_NAME=${{ secrets.CLOUD_NAME }}' >> .env
+          echo 'DB_HOST=${{ secrets.DB_HOST }}' >> .env
+          echo 'DB_NAME=${{ secrets.DB_NAME }}' >> .env
+          echo 'DB_PASSWORD=${{ secrets.DB_PASSWORD }}' >> .env
+          echo 'DB_USER=${{ secrets.DB_USER }}' >> .env
+          echo 'EMAIL_ADDRESS=${{ secrets.EMAIL_ADDRESS }}' >> .env
+          echo 'EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}' >> .env
 
-            # Check if PyInstaller created the binary
-            ls -lah dist/
+          # Build executable
+          export PYINSTALLER_NO_LIBPYTHON=1
+          python3.7 -m PyInstaller --onefile --name myapp --add-data '.env:.env' main.py
 
-            # Move binary to organized folder
-            mkdir -p dist/linux
-            mv dist/myapp dist/linux/
-          "
+          # Move binary to organized folder
+          mkdir -p dist/linux
+          mv dist/myapp dist/linux/
+        "
 
-      - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: myapp-linux
-          path: dist/linux/
-
+    - name: Upload Linux artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: myapp-linux
+        path: dist/linux/
 
   build-macos:
     runs-on: macos-latest
