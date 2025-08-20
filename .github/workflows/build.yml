@@ -8,41 +8,43 @@ on:
 jobs:
   build-linux:
     runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux2014_x86_64  # Use container to fix glibc
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install dependencies
+      - name: Build inside manylinux2014 container
         run: |
-          # Use Python 3.7 already in the container
-          /opt/python/cp37-cp37m/bin/pip install --upgrade pip
-          /opt/python/cp37-cp37m/bin/pip install pyinstaller -r requirements.txt
+          docker run --rm -v ${{ github.workspace }}:/src -w /src quay.io/pypa/manylinux2014_x86_64 bash -c "
+            # Use preinstalled Python 3.7
+            /opt/python/cp37-cp37m/bin/pip install --upgrade pip
+            /opt/python/cp37-cp37m/bin/pip install pyinstaller -r requirements.txt
 
-      - name: Create .env file
-        run: |
-          echo "API_KEY=${{ secrets.API_KEY }}" >> .env
-          echo "API_SECRET=${{ secrets.API_SECRET }}" >> .env
-          echo "CLOUD_NAME=${{ secrets.CLOUD_NAME }}" >> .env
-          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
-          echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-          echo "EMAIL_ADDRESS=${{ secrets.EMAIL_ADDRESS }}" >> .env
-          echo "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}" >> .env
+            # Create .env file
+            echo 'API_KEY=${{ secrets.API_KEY }}' >> .env
+            echo 'API_SECRET=${{ secrets.API_SECRET }}' >> .env
+            echo 'CLOUD_NAME=${{ secrets.CLOUD_NAME }}' >> .env
+            echo 'DB_HOST=${{ secrets.DB_HOST }}' >> .env
+            echo 'DB_NAME=${{ secrets.DB_NAME }}' >> .env
+            echo 'DB_PASSWORD=${{ secrets.DB_PASSWORD }}' >> .env
+            echo 'DB_USER=${{ secrets.DB_USER }}' >> .env
+            echo 'EMAIL_ADDRESS=${{ secrets.EMAIL_ADDRESS }}' >> .env
+            echo 'EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}' >> .env
 
-      - name: Build executable
-        run: |
-          export PYINSTALLER_NO_LIBPYTHON=1
-          /opt/python/cp37-cp37m/bin/python -m PyInstaller --onefile --name myapp --add-data ".env:.env" main.py
-          mkdir -p dist/linux
-          mv dist/myapp dist/linux/
+            # Build executable
+            export PYINSTALLER_NO_LIBPYTHON=1
+            /opt/python/cp37-cp37m/bin/python -m PyInstaller --onefile --name myapp --add-data '.env:.env' main.py
+
+            # Move to dist folder
+            mkdir -p dist/linux
+            mv dist/myapp dist/linux/
+          "
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: myapp-linux
           path: dist/linux/
+
   build-macos:
     runs-on: macos-latest
     steps:
