@@ -8,26 +8,22 @@ on:
 jobs:
 
 
-  build-linux:
-    runs-on: ubuntu-latest
-    steps:
+ build-linux:
+  runs-on: ubuntu-latest
+  steps:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Build inside manylinux2014 container
+    - name: Build Linux executable with Nuitka (Python 3.10) including .env
       run: |
-        docker run --rm -v $PWD:/src -w /src quay.io/pypa/manylinux2014_x86_64:python3.8 bash -c "
+        docker run --rm -v ${{ github.workspace }}:/src -w /src quay.io/pypa/manylinux2014_x86_64:latest bash -c "
           # Upgrade pip
-          python3.8 -m pip install --upgrade pip
+          python3.10 -m pip install --upgrade pip
 
-          # Install dependencies including PyInstaller
-          python3.8 -m pip install -r requirements.txt pyinstaller
+          # Install Nuitka and dependencies
+          python3.10 -m pip install nuitka setuptools wheel python-dotenv
 
-          # Verify Python and pip
-          python3.8 --version
-          python3.8 -m pip --version
-
-          # Ensure .env exists
+          # Create .env file with secrets
           echo 'API_KEY=${{ secrets.API_KEY }}' >> .env
           echo 'API_SECRET=${{ secrets.API_SECRET }}' >> .env
           echo 'CLOUD_NAME=${{ secrets.CLOUD_NAME }}' >> .env
@@ -38,13 +34,17 @@ jobs:
           echo 'EMAIL_ADDRESS=${{ secrets.EMAIL_ADDRESS }}' >> .env
           echo 'EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}' >> .env
 
-          # Build executable
-          export PYINSTALLER_NO_LIBPYTHON=1
-          python3.8 -m PyInstaller --onefile --name myapp --add-data '.env:.env' main.py
+          # Build standalone executable and include .env
+          python3.10 -m nuitka \
+            --standalone \
+            --onefile \
+            --output-dir=dist \
+            --include-data-files='.env=.env' \
+            main.py
 
           # Move binary to organized folder
           mkdir -p dist/linux
-          mv dist/myapp dist/linux/
+          mv dist/main dist/linux/myapp
         "
 
     - name: Upload Linux artifact
