@@ -8,7 +8,7 @@ on:
 jobs:
   build-linux:
     runs-on: ubuntu-latest   # ✅ Modern runner
-    container: quay.io/pypa/manylinux_2_28_x86_64  # ✅ Stable glibc container
+    container: quay.io/pypa/manylinux2014_x86_64  # ✅ Oldest glibc for max compatibility
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -33,6 +33,7 @@ jobs:
 
       - name: Build executable
         run: |
+          export PYINSTALLER_NO_LIBPYTHON=1   # ✅ Skip libpython requirement
           python3.10 -m PyInstaller --onefile --name myapp --add-data ".env:.env" main.py
           mkdir -p dist/linux
           mv dist/myapp dist/linux/
@@ -42,6 +43,7 @@ jobs:
         with:
           name: myapp-linux
           path: dist/linux/
+
   build-macos:
     runs-on: macos-latest
     steps:
