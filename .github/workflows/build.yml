@@ -16,9 +16,12 @@ jobs:
         run: |
           docker run --rm -v ${{ github.workspace }}:/src -w /src quay.io/pypa/manylinux2014_x86_64 \
           bash -c "
-            python3.10 -m ensurepip &&
-            python3.10 -m pip install --upgrade pip &&
-            python3.10 -m pip install pyinstaller -r requirements.txt &&
+            # Use the preinstalled Python 3.7
+            /opt/python/cp37-cp37m/bin/python -m ensurepip &&
+            /opt/python/cp37-cp37m/bin/python -m pip install --upgrade pip &&
+            /opt/python/cp37-cp37m/bin/pip install pyinstaller -r requirements.txt &&
+            
+            # Create .env from secrets
             echo 'API_KEY=${{ secrets.API_KEY }}' >> .env &&
             echo 'API_SECRET=${{ secrets.API_SECRET }}' >> .env &&
             echo 'CLOUD_NAME=${{ secrets.CLOUD_NAME }}' >> .env &&
@@ -28,8 +31,12 @@ jobs:
             echo 'DB_USER=${{ secrets.DB_USER }}' >> .env &&
             echo 'EMAIL_ADDRESS=${{ secrets.EMAIL_ADDRESS }}' >> .env &&
             echo 'EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}' >> .env &&
+
+            # Build executable with embedded Python
             export PYINSTALLER_NO_LIBPYTHON=1 &&
-            python3.10 -m PyInstaller --onefile --name myapp --add-data '.env:.env' main.py &&
+            /opt/python/cp37-cp37m/bin/python -m PyInstaller --onefile --name myapp --add-data '.env:.env' main.py &&
+
+            # Move to dist folder
             mkdir -p dist/linux &&
             mv dist/myapp dist/linux/
           "
@@ -39,7 +46,6 @@ jobs:
         with:
           name: myapp-linux
           path: dist/linux/
-
   build-macos:
     runs-on: macos-latest
     steps:
