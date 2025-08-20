@@ -18,14 +18,14 @@ jobs:
       run: |
         docker run --rm -v ${{ github.workspace }}:/src -w /src quay.io/pypa/manylinux2014_x86_64 bash -c "
           # Upgrade pip
-          python3.7 -m pip install --upgrade pip
+          python3.8 -m pip install --upgrade pip
 
           # Install dependencies including PyInstaller
-          python3.7 -m pip install -r requirements.txt pyinstaller
+          python3.8 -m pip install -r requirements.txt pyinstaller
 
           # Verify Python and pip
-          python3.7 --version
-          python3.7 -m pip --version
+          python3.8 --version
+          python3.8 -m pip --version
 
           # Ensure .env exists
           echo 'API_KEY=${{ secrets.API_KEY }}' >> .env
@@ -40,7 +40,7 @@ jobs:
 
           # Build executable
           export PYINSTALLER_NO_LIBPYTHON=1
-          python3.7 -m PyInstaller --onefile --name myapp --add-data '.env:.env' main.py
+          python3.8 -m PyInstaller --onefile --name myapp --add-data '.env:.env' main.py
 
           # Move binary to organized folder
           mkdir -p dist/linux
